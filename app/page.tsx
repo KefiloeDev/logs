@@ -1,101 +1,205 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { saveAs } from "file-saver";
+import { Button} from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectItem, SelectTrigger,
+  SelectValue,
+  SelectContent,} from "@/components/ui/select";
+
+
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [formData, setFormData] = useState({
+    persalNo: "",
+    contactName: "",
+    surname: "",
+    email: "",
+    phoneNumber: "",
+    cellNumber: "",
+    dhaOffice: "",
+    floorRoom: "",
+    callDescription: "",
+    hostname: "",
+    technicianName: "",
+    technicianContact: "",
+    callStatus: "",
+    comments: "",
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const generatePDF = async () => {
+    // PDF generation logic
+    const existingPdfBytes = await fetch("/template.pdf").then((res) =>
+      res.arrayBuffer()
+    );
+    const pdfDoc = await PDFDocument.load(existingPdfBytes);
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const page = pdfDoc.getPages()[0];
+
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, "0");
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
+    const dateStr = `${day} ${month} ${year}`;
+    const timeStr = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    // Define coordinates for each field
+    page.drawText(`${dateStr}`, {
+      x: 260,
+      y: 700,
+      size: 12,
+      font: helveticaFont,
+      color: rgb(0, 0, 0),
+    });
+    page.drawText(`${timeStr}`, {
+      x: 480,
+      y: 700,
+      size: 12,
+      font: helveticaFont,
+      color: rgb(0, 0, 0),
+    });
+    page.drawText(formData.persalNo, {
+      x: 220,
+      y: 680,
+      size: 12,
+      font: helveticaFont,
+      color: rgb(0, 0, 0),
+    });
+    // Continue for other fields...
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    saveAs(blob, "POE_CALL_LOGGING_CPTi_AIRPORT.pdf");
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center bg-gray-100 p-4">
+      <h1 className="text-2xl font-semibold mb-6">Call Logging Form</h1>
+      <form className="w-full max-w-lg space-y-4 bg-white p-6 rounded-lg shadow-lg">
+        <Input
+          name="persalNo"
+          placeholder="PERSAL No"
+          onChange={handleChange}
+          label="PERSAL No"
+        />
+        <Input
+          name="contactName"
+          placeholder="Contact Name"
+          onChange={handleChange}
+          label="Contact Name"
+        />
+        <Input
+          name="surname"
+          placeholder="Surname"
+          onChange={handleChange}
+          label="Surname"
+        />
+        <Input
+          name="email"
+          placeholder="Email"
+          onChange={handleChange}
+          label="Email"
+        />
+        <Input
+          name="phoneNumber"
+          placeholder="Phone Number"
+          onChange={handleChange}
+          label="Phone Number"
+        />
+        <Input
+          name="cellNumber"
+          placeholder="Cell Number"
+          onChange={handleChange}
+          label="Cell Number"
+        />
+        <Input
+          name="dhaOffice"
+          placeholder="DHA Office/Site"
+          onChange={handleChange}
+          label="DHA Office/Site"
+        />
+        <Input
+          name="floorRoom"
+          placeholder="Floor & Room No."
+          onChange={handleChange}
+          label="Floor & Room No."
+        />
+        <Textarea
+          name="callDescription"
+          placeholder="Call Description"
+          onChange={handleChange}
+          label="Call Description"
+        />
+        <Select
+  name="hostname"
+  onValueChange={(value) => setFormData((prev) => ({ ...prev, hostname: value }))}
+>
+  <SelectTrigger className="w-full">
+    <SelectValue placeholder="Select Hostname" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="DTA19CPO109">DTA19CPO109</SelectItem>
+    <SelectItem value="DTA20CPO210">DTA20CPO210</SelectItem>
+    {/* Add more options here */}
+  </SelectContent>
+</Select>
+        <Input
+          name="technicianName"
+          placeholder="Technician Name"
+          onChange={handleChange}
+          label="Technician Name"
+        />
+        <Input
+          name="technicianContact"
+          placeholder="Technician Contact"
+          onChange={handleChange}
+          label="Technician Contact"
+        />
+        <Input
+          name="callStatus"
+          placeholder="Call Status"
+          onChange={handleChange}
+          label="Call Status"
+        />
+        <Textarea
+          name="comments"
+          placeholder="Comments"
+          onChange={handleChange}
+          label="Comments"
+        />
+        <Button
+          type="button"
+          onClick={generatePDF}
+          className="w-full bg-blue-500 text-white hover:bg-blue-600"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Download as PDF
+        </Button>
+      </form>
     </div>
   );
 }
