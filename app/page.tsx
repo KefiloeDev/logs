@@ -37,7 +37,7 @@ export default function Home() {
 
   const generatePDF = async () => {
     // PDF generation logic
-    const existingPdfBytes = await fetch("/template.pdf").then((res) =>
+    const existingPdfBytes = await fetch("./template.pdf").then((res) =>
       res.arrayBuffer()
     );
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
